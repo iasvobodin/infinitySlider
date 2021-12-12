@@ -1,5 +1,5 @@
 <script>
-  import { progress } from "store.js";
+  import { progress } from "$lib/store.js";
   import { onMount } from "svelte";
   $: style = `clip-path: inset(0% ${100 - $progress}% 0px 0px);`;
   // onMount(() => {

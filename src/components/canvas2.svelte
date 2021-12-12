@@ -9,18 +9,18 @@
     RenderTarget,
   } from "curtainsjs/src/index.mjs";
   import anime from "animejs";
-  import { debounce, forEach } from "lodash-es/lodash";
+  import debounce from "lodash/debounce.js";
   import { tweened } from "svelte/motion";
   // import photoseries from "db/Photoseries.json";
-  import fragment from "assets/photoseries.frag";
-  import vertex from "assets/photoseries.vert";
-  import vertexT from "assets/start.vert";
-  import fragmentT from "assets/start.frag";
-  import trvert from "assets/tr.vert";
-  import trfrag from "assets/tr.frag";
-  import shaderPassFs from "assets/shaderPassFs.frag";
-  import shaderPassVs from "assets/shaderPassFs.vert";
-  import rgbFs from "assets/rgbPass.frag";
+  import fragment from "$lib/assets/photoseries.frag?raw";
+  import vertex from "$lib/assets/photoseries.vert?raw";
+  import vertexT from "$lib/assets/start.vert?raw";
+  import fragmentT from "$lib/assets/start.frag?raw";
+  import trvert from "$lib/assets/tr.vert?raw";
+  import trfrag from "$lib/assets/tr.frag?raw";
+  import shaderPassFs from "$lib/assets/shaderPassFs.frag?raw";
+  import shaderPassVs from "$lib/assets/shaderPassFs.vert?raw";
+  import rgbFs from "$lib/assets/rgbPass.frag?raw";
   // import fragment from "assets/start.frag";
   // import vertex from "assets/start.vert";
   import {
@@ -32,12 +32,13 @@
     photoseries,
     leaveIndex, // true then animation to route
     leaveRoute, // true then animation to index
-  } from "store.js";
+  } from "$lib/store.js";
   // import {
   //     getUnifors
   // } from "func.js";
   import { afterUpdate, getContext, onMount, setContext, tick } from "svelte";
-  import { goto, stores, start } from "@sapper/app";
+  import { goto } from "$app/navigation";
+  import { page } from "$app/stores";
   // import { sineOut } from "svelte/easing";
   //INIT BEFORE MOUNT
 
@@ -92,7 +93,6 @@
       zRoundEnable: 0,
     };
   //   let src, textureTag;
-  const { page } = stores();
   //   $: pageslug = $page.params.Route;
   let titlePlaneOnLoad = false;
   $: aspect = 0;
@@ -455,10 +455,8 @@
   function getUnifors(plane, opt = { pCorr: true, sCorr: true, fCorr: true }) {
     // GET BOUND
     const { width, height, left } = plane.getWebGLBoundingRect();
-    const {
-      width: curtainsWidth,
-      height: curtainsHeight,
-    } = curtains.getBoundingRect();
+    const { width: curtainsWidth, height: curtainsHeight } =
+      curtains.getBoundingRect();
     // const curtainsWidth =
     //     curtains.getBoundingRect().width / curtains.pixelRatio;
     // const curtainsHeight =

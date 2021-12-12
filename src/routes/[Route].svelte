@@ -1,13 +1,19 @@
 <script context="module">
-  export async function preload({ params }) {
-    const res = await this.fetch(`/db/${params.Route}.json`);
+  export async function load({ page, fetch }) {
+    const res = await fetch(`/db/${page.params.Route}.json`);
     const data = await res.json();
-    return { data };
+    if (res.ok) {
+      return {
+        props: {
+          gallery: data,
+        },
+      };
+    }
   }
 </script>
 
 <script>
-  import { debounce } from "lodash-es/lodash";
+  import debounce from 'lodash/debounce.js';
   import { onMount, tick } from "svelte";
   import justifiedLayout from "justified-layout";
   import Spic from "../components/spic.svelte";
@@ -19,11 +25,11 @@
     leaveIndex,
     photoseries,
     homePageState,
-  } from "store.js";
+  } from "$lib/store.js";
   import { fly } from "svelte/transition";
-  import { stores } from "@sapper/app";
+  import { page } from "$app/stores";
   console.log("routeInit");
-  const { page } = stores();
+  // const { page } = stores();
   // showPrelader.set(false);
   // eventAnimation.set(false);
   // const object = $photoseries.find((el) => el.Route === $page.params.Route);
@@ -38,10 +44,8 @@
   // titleIndex.set(object.Id);
   let paddingCoef;
   $: galleryParams = {};
-  let layout,
-    height,
-    width,
-    gallery = {};
+  let layout, height, width;
+  // gallery = {};
   $: galleryHeight = 0;
   // visible = false;
   function getJL(text) {
@@ -93,8 +97,8 @@
     });
     // return layout;
   }
-  export let data;
-  $: gallery = data;
+  export let gallery;
+  // $: gallery = data;
 
   function imageWidth(x) {
     const calcWidth =
@@ -135,11 +139,11 @@
 </script>
 
 <svelte:head>
-  <title>{gallery.Title}</title>
+  <title>{gallery?.Title}</title>
 </svelte:head>
 
 <h1 transition:fly on:outrostart={() => leaveRoute.set(true)}>
-  {gallery.Title}
+  {gallery?.Title}
 </h1>
 <!-- <div class="div"> -->
 {#if galleryHeight && !$leaveIndex}
