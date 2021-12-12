@@ -9,7 +9,7 @@
     RenderTarget,
   } from "curtainsjs/src/index.mjs";
   import anime from "animejs";
-  import debounce from "lodash/debounce.js";
+  import debounce from "lodash.debounce";
   import { tweened } from "svelte/motion";
   // import photoseries from "db/Photoseries.json";
   import fragment from "$lib/assets/photoseries.frag?raw";

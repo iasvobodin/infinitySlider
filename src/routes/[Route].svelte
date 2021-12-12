@@ -13,7 +13,7 @@
 </script>
 
 <script>
-  import debounce from 'lodash/debounce.js';
+  import debounce from "lodash.debounce";
   import { onMount, tick } from "svelte";
   import justifiedLayout from "justified-layout";
   import Spic from "../components/spic.svelte";

@@ -1,6 +1,8 @@
 /** @type {import('@sveltejs/kit').Config} */
 import adapter from '@sveltejs/adapter-static';
 // import { resolve } from "path";
+import { visualizer } from 'rollup-plugin-visualizer'
+
 import path from 'path';
 const config = {
 	kit: {
@@ -17,7 +19,10 @@ const config = {
 					$utils: path.resolve('./src/utils')
 					// "@": resolve(__dirname, "src"),
 				}
-			}
+			},
+			plugins: [
+				visualizer()
+			]
 		},
 		// hydrate the <div id="svelte"> element in src/app.html
 		target: '#svelte',
