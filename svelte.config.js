@@ -1,7 +1,7 @@
 /** @type {import('@sveltejs/kit').Config} */
 import adapter from '@sveltejs/adapter-static';
 // import { resolve } from "path";
-import { visualizer } from 'rollup-plugin-visualizer'
+// import { visualizer } from 'rollup-plugin-visualizer'
 
 import path from 'path';
 const config = {
@@ -13,6 +13,13 @@ const config = {
 			fallback: null
 		}),
 		vite: {
+			// build: {
+			// 	rollupOptions: {
+			// 		output: {
+			// 			manualChunks: undefined
+			// 		},
+			// 	}
+			// },
 			resolve: {
 				alias: {
 					// $utils: path.resolve('./src/utils')
@@ -20,9 +27,9 @@ const config = {
 					// "@": resolve(__dirname, "src"),
 				}
 			},
-			plugins: [
-				visualizer()
-			]
+			// plugins: [
+			// 	visualizer()
+			// ]
 		},
 		// hydrate the <div id="svelte"> element in src/app.html
 		target: '#svelte',
