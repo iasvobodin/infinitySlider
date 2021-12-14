@@ -1,6 +1,12 @@
 <script>
     import { eventAnimation, photoseries } from "$lib/store.js";
     import {
+        goto,
+        invalidate,
+        prefetch,
+        prefetchRoutes,
+    } from "$app/navigation";
+    import {
         Curtains,
         Plane,
         Vec3,
@@ -9,9 +15,29 @@
         ShaderPass,
         RenderTarget,
     } from "curtainsjs/src/index.mjs";
+    import { onMount } from "svelte";
+    import fragment from "$lib/assets/photoseries.frag?raw";
+    import vertex from "$lib/assets/photoseries.vert?raw";
+    import { gsap } from "gsap";
+    onMount(() => {
+        initCurtains();
+        curtains.onSuccess(() => {
+            addPlane();
+        });
+        // gsap.ticker.add(curtains.render.bind(curtains));
+        // gsap.ticker.add(() => curtains.render());
+    });
+
     let slider,
         webgl,
         curtains,
+        planes = [],
+        //getUniform parametr
+        widthUn = 0.7,
+        heightUn = 0.8,
+        aspect = 0.668,
+        //SLIDER EVENTS
+        isTrackpad = true,
         sliderState = {
             clickDown: "",
             clickUp: "",
@@ -29,19 +55,143 @@
         curtains = new Curtains({
             container: webgl,
             pixelRatio: Math.min(1.5, window.devicePixelRatio),
-            production: process.env.NODE_ENV !== "development",
-            //   autoRender: false,
+            // production: process.env.NODE_ENV !== "development",
+            autoRender: false,
             //   antialias: false,
             // preserveDrawingBuffer: true,
             // depth: false,
             // autoResize: false,
             //   watchScroll: false,
         });
+        curtains
+            .onError(() => {
+                document.body.classList.add("no-curtains");
+                curtains = null;
+            })
+            .onContextLost(() => {
+                curtains.restoreContext();
+            });
         // curtains.canvas.height = window.innerHeight;
         // curtains.canvas.width = window.innerWidth;
         // distortionTarget = new RenderTarget(curtains);
         // rgbTarget = new RenderTarget(curtains);
         // loader = new TextureLoader(curtains);
+    }
+    function addPlane() {
+        // console.log("createplane");
+        const planeElement = document.getElementsByClassName("plane");
+        const paramsPlane = {
+            widthSegments: 16,
+            heightSegments: 16,
+            vertexShader: vertex,
+            fragmentShader: fragment,
+            // visible: 1,
+            // autoloadSources: true,
+            // depthTest: false,
+            // fov: 1,
+            //   renderOrder: 2,
+            // alwaysDraw: false,
+            //   texturesOptions: {
+            //     minFilter: curtains.gl.LINEAR_MIPMAP_NEAREST,
+            //   },
+            // shareProgram: true,
+            watchScroll: false,
+            uniforms: {
+                uColor: { name: "uColor", type: "3f", value: [] },
+                uScaleVector: {
+                    name: "uScaleVector",
+                    type: "2f",
+                    value: [0, 0],
+                },
+                uMouse: { name: "uMouse", type: "2f", value: [] },
+                uPlanePosition: {
+                    name: "uPlanePosition",
+                    type: "2f",
+                    value: [0, 0],
+                },
+                uFragmentCorrection: {
+                    name: "uFragmentCorrection",
+                    type: "2f",
+                    value: [],
+                },
+                uProgress: { name: "uProgress", type: "1f", value: 0 },
+                uOpacity: { name: "uOpacity", type: "1f", value: 1 },
+            },
+        };
+
+        [...planeElement].forEach((element, i) => {
+            const plane = new Plane(curtains, element, paramsPlane);
+            // plane.userData = {
+            //     route: $photoseries[plane.index].Route,
+            //     color: $photoseries[plane.index].ColorVector,
+            //     id: $photoseries[plane.index].Id,
+            // };
+            // getUniforms(plane, {
+            //     pCorr: false,
+            //     sCorr: false,
+            //     fCorr: true,
+            // });
+            //   plane.setRenderTarget(distortionTarget);
+
+            //   setTexture(plane);
+
+            planes.push(plane);
+        });
+        curtains.render();
+    }
+    function getUniforms(
+        plane,
+        opt = { pCorr: true, sCorr: true, fCorr: true }
+    ) {
+        // GET BOUND
+        const { width, height, left, top } = plane.getWebGLBoundingRect();
+        const { width: curtainsWidth, height: curtainsHeight } =
+            curtains.getBoundingRect();
+        // const curtainsWidth =
+        //     curtains.getBoundingRect().width / curtains.pixelRatio;
+        // const curtainsHeight =
+        //     curtains.getBoundingRect().height / curtains.pixelRatio;
+        // const top = (curtainsHeight - height) / 2;
+        const calcCords = {};
+        // SET CORRECTION FRAGMENT SHADER NEED TO START AND RESIZE
+        if (opt.fCorr) {
+            const scaleWidth = window.innerWidth * widthUn;
+            const scaleHeight = window.innerHeight * heightUn;
+            if (scaleHeight / scaleWidth > aspect) {
+                calcCords.xNorm = (scaleWidth / scaleHeight) * aspect;
+                calcCords.yNorm = 1;
+            } else {
+                calcCords.xNorm = 1;
+                calcCords.yNorm = scaleHeight / scaleWidth / aspect;
+            }
+            plane.uniforms.uFragmentCorrection.value = [
+                calcCords.xNorm,
+                calcCords.yNorm,
+            ];
+        }
+
+        // SET SCALE VECTOR NEED TO START AND RESIZE
+        if (opt.sCorr) {
+            plane.uniforms.uScaleVector.value = [
+                (curtainsWidth * widthUn) / width - 1, // * 0.5,
+                (curtainsHeight * heightUn) / height - 1, //* 0.7
+            ];
+        }
+        // PLANE SIZE
+        calcCords.w = curtainsWidth / width;
+        calcCords.h = curtainsHeight / height;
+        // console.log(top, height);
+
+        // PLANE POSITION VECTOR
+        calcCords.x = (left / width - calcCords.w / 2 + 0.5) * 2;
+        calcCords.y = (-(top / height - calcCords.h / 2) - 0.5) * 2;
+
+        if (opt.pCorr) {
+            plane.uniforms.uPlanePosition.value = [calcCords.x, calcCords.y];
+        }
+        // else {
+        //     plane.uniforms.uPlanePosition.value = [0, 0];
+        // }
     }
 
     function onMouseDown(e) {
@@ -71,26 +221,26 @@
         // }
     }
     function onWheel(e) {
-        if ($eventAnimation) {
-            e.preventDefault();
-            if (isTrackpad) {
-                if (e.wheelDeltaY) {
-                    if (Math.abs(e.wheelDeltaY) !== 120) {
-                        isTrackpad = false;
-                    }
-                } else if (e.deltaMode === 0) {
+        // if ($eventAnimation) {
+        curtains && e.preventDefault();
+        if (isTrackpad) {
+            if (e.wheelDeltaY) {
+                if (Math.abs(e.wheelDeltaY) !== 120) {
                     isTrackpad = false;
                 }
+            } else if (e.deltaMode === 0) {
+                isTrackpad = false;
             }
-            const delta = window.navigator.userAgent.includes("Firefox")
-                ? e.deltaY * 33
-                : e.deltaY;
-            !isTrackpad
-                ? (sliderState.currentPosition += e.deltaY * -1)
-                : (sliderState.currentPosition += delta * -1);
-            sliderState.endPosition = sliderState.currentPosition;
-            // onChangeTitle(sliderState.currentPosition, e);
         }
+        const delta = window.navigator.userAgent.includes("Firefox")
+            ? e.deltaY * 33
+            : e.deltaY;
+        !isTrackpad
+            ? (sliderState.currentPosition += e.deltaY * -1)
+            : (sliderState.currentPosition += delta * -1);
+        sliderState.endPosition = sliderState.currentPosition;
+        // onChangeTitle(sliderState.currentPosition, e);
+        // }
     }
     function getMousePosition(e) {
         let mousePosition;
@@ -128,14 +278,10 @@
     on:touchstart|preventDefault={onMouseDown}
     on:touchend={onMouseUp}
     on:wheel={onWheel}
-    class="wrapper"
+    class="wrapper "
 >
     {#each $photoseries as seriya, index (index)}
-        <!-- <a style="display: none;" href="/{seriya.Route}">r</a> -->
-        <!-- data-id={index}
-        data-route={seriya.Route}
-        data-color={[seriya.ColorVector]} -->
-        <div class="plane">
+        <div class="plane" class:plane__redy={curtains}>
             <picture class="standart__picture">
                 <source
                     media="(orientation: portrait)"
@@ -157,7 +303,8 @@
                 />
 
                 <img
-                    style="opacity:1"
+                    on:click={() => goto(`/${seriya.Route}`)}
+                    style="cursor: pointer"
                     data-sampler="planeTexture"
                     class="slider__img"
                     alt="SvobodinaPhoto"
@@ -175,10 +322,21 @@
 
 <style>
     .wrapper {
-        align-content: center;
-        height: 100vh;
+        /* align-content: center; */
+        justify-content: center;
+        /* height: 100vh; */
         display: grid;
-        grid-auto-flow: column;
+        width: 100%;
+        /* grid-auto-flow: column; */
+    }
+    .plane__redy {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translateX(-50%) translateY(-50%);
+    }
+    .plane__redy img {
+        opacity: 0;
     }
     #curtains {
         pointer-events: none;
