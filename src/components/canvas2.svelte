@@ -7,7 +7,7 @@
     TextureLoader,
     ShaderPass,
     RenderTarget,
-  } from "curtainsjs/src/index.mjs";
+  } from "curtainsjs/src/index";
   import anime from "animejs";
   import debounce from "lodash.debounce";
   import { tweened } from "svelte/motion";

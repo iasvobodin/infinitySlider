@@ -19,23 +19,36 @@
     import fragment from "$lib/assets/photoseries.frag?raw";
     import vertex from "$lib/assets/photoseries.vert?raw";
     import { gsap } from "gsap";
-    onMount(() => {
-        initCurtains();
-        curtains.onSuccess(() => {
-            addPlane();
-        });
-        // gsap.ticker.add(curtains.render.bind(curtains));
-        // gsap.ticker.add(() => curtains.render());
-    });
+    // import { anime } from "animejs";
 
     let slider,
         webgl,
         curtains,
         planes = [],
+        //ANIMATIONS
+        disp = 0,
+        angleStep = (Math.PI * 2) / $photoseries.length,
+        transVec = new Vec3(),
+        step = Math.PI / 2 - angleStep,
+        transitionState = {
+            opacityPlane: 1,
+            time: 0,
+            radiusAnimation: 0,
+            scalePlane: 0.015,
+            yRoundDisable: 1,
+            zRoundEnable: 0,
+        },
+        aspect = 0.668,
+        height = 0.69,
+        margin = 0,
+        elWidth = 0,
+        radius = 0,
+        radiusCoef = 0.0755,
+        animationFrame = null,
         //getUniform parametr
         widthUn = 0.7,
         heightUn = 0.8,
-        aspect = 0.668,
+        // aspect = 0.668,
         //SLIDER EVENTS
         isTrackpad = true,
         sliderState = {
@@ -56,7 +69,7 @@
             container: webgl,
             pixelRatio: Math.min(1.5, window.devicePixelRatio),
             // production: process.env.NODE_ENV !== "development",
-            autoRender: false,
+            // autoRender: false,
             //   antialias: false,
             // preserveDrawingBuffer: true,
             // depth: false,
@@ -86,9 +99,9 @@
             vertexShader: vertex,
             fragmentShader: fragment,
             // visible: 1,
-            // autoloadSources: true,
+            autoloadSources: true,
             // depthTest: false,
-            // fov: 1,
+            fov: 1,
             //   renderOrder: 2,
             // alwaysDraw: false,
             //   texturesOptions: {
@@ -135,9 +148,9 @@
 
             //   setTexture(plane);
 
-            planes.push(plane);
+            plane.onReady(() => planes.push(plane));
         });
-        curtains.render();
+        // curtains.render();
     }
     function getUniforms(
         plane,
@@ -193,6 +206,144 @@
         //     plane.uniforms.uPlanePosition.value = [0, 0];
         // }
     }
+    // function startAnim() {
+    //     console.log("here");
+    //     // if ($page.params.Route) return;
+    //     // homePageState.set(true);
+    //     startAnimation = anime
+    //         .timeline({
+    //             // autoplay: false,
+    //         })
+    //         // .add({
+    //         //     // update: () => {
+    //         //     //     console.log("startAnim()");
+    //         //     // },
+    //         //     targets: transitionState,
+    //         //     duration: 5000,
+    //         //     easing: "easeOutSine",
+    //         //     time: Math.PI * 4,
+    //         // })
+    //         .add(
+    //             {
+    //                 duration: 2000,
+    //                 targets: [transitionState],
+    //                 opacity: [1, 0],
+    //                 radiusAnimation: radius,
+    //                 scalePlane: 1,
+    //                 yRoundDisable: 0,
+    //                 zRoundEnable: 1,
+    //                 easing: "easeInOutSine",
+    //             },
+    //             2000
+    //         )
+    //         // .add(
+    //         //     {
+    //         //         duration: 500,
+    //         //         targets: [".preloader", ".logo"],
+    //         //         opacity: 0,
+    //         //         easing: "linear",
+    //         //     },
+    //         //     1800
+    //         // )
+    //         .add(
+    //             {
+    //                 duration: 300,
+    //                 targets: [transitionState, ".main__head"],
+    //                 opacityPlane: 0,
+    //                 opacity: 1,
+    //                 change: () => {
+    //                     planes.forEach((plane, i) => {
+    //                         if (plane.relativeTranslation.z < 0) {
+    //                             plane.uniforms.uOpacity.value =
+    //                                 transitionState.opacityPlane;
+    //                         }
+    //                     });
+    //                 },
+    //                 changeComplete: () => {
+    //                     planes.forEach((plane, i) => {
+    //                         // console.log(plane.relativeTranslation.z);
+    //                         planeChangeView(plane);
+    //                     });
+    //                 },
+    //                 easing: "linear",
+    //             },
+    //             4000
+    //         );
+    //     startAnimation &&
+    //         startAnimation.finished.then(() => {
+    //             homePageState.set(true);
+    //             startAnimation = null;
+    //         });
+    // }
+
+    function translateSlider(t) {
+        // curtains.render();
+
+        // if ($eventAnimation) {
+        sliderState.translation +=
+            (sliderState.currentPosition - sliderState.translation) * 0.05;
+        // }
+        // disp +=
+        //     (sliderState.currentPosition - sliderState.translation - disp) *
+        //     0.3;
+        // shaderPass && (shaderPass.uniforms.displacement.value = disp / 2500);
+
+        planes.forEach((plane, i) => {
+            // console.log("e");
+
+            const angle = angleStep * i;
+            transVec.set(
+                Math.cos(
+                    angle +
+                        step +
+                        angleStep -
+                        sliderState.planeCorrection -
+                        sliderState.translation / 1300 +
+                        transitionState.time
+                ) * transitionState.radiusAnimation,
+                // Y
+                Math.cos(angle + transitionState.time) *
+                    transitionState.radiusAnimation *
+                    transitionState.yRoundDisable,
+                // Z
+                Math.sin(
+                    angle +
+                        step +
+                        angleStep -
+                        sliderState.planeCorrection -
+                        sliderState.translation / 1300 +
+                        transitionState.time
+                ) *
+                    transitionState.radiusAnimation *
+                    transitionState.zRoundEnable
+            );
+            // if ($eventAnimation) {
+            // plane.setScale(
+            //     new Vec2(transitionState.scalePlane, transitionState.scalePlane)
+            // );
+            //     // if (titlePlaneOnLoad) {
+            //     //     rgbPass.uniforms.scrollEffect.value = disp;
+            //     //     planesTitle[i].setRelativeTranslation(transVec);
+            //     // }
+            // }
+            // console.log(transVec);
+            // if ($homePageState) {
+            //     if (plane.relativeTranslation.z < 0) {
+            //         plane.visible = planesTitle[i].visible = false;
+            //     } else {
+            //         plane.visible = planesTitle[i].visible = true;
+            //     }
+            // }
+            plane.setRelativeTranslation(transVec);
+        });
+        // START ANIMATION
+
+        // toIndex && toIndex.tick(t);
+        // toRoute && toRoute.tick(t);
+        // startAnimation && startAnimation.tick(t);
+
+        animationFrame = requestAnimationFrame(translateSlider);
+    }
 
     function onMouseDown(e) {
         sliderState.isMouseDown = true;
@@ -241,6 +392,7 @@
         sliderState.endPosition = sliderState.currentPosition;
         // onChangeTitle(sliderState.currentPosition, e);
         // }
+        console.log(sliderState.currentPosition);
     }
     function getMousePosition(e) {
         let mousePosition;
@@ -265,6 +417,33 @@
         }
         return mousePosition;
     }
+
+    onMount(() => {
+        initCurtains();
+        curtains.onSuccess(() => {
+            addPlane();
+        });
+        aspect = 0.668;
+        height = 0.69;
+        margin = 0.06;
+        elWidth =
+            (window.innerHeight * height) / aspect +
+            window.innerWidth * margin * 2;
+        radius =
+            elWidth / Math.sin((Math.PI * 2) / $photoseries.length / 2) / 2;
+        // console.log(planes);
+        transitionState.radiusAnimation = radius;
+        transitionState.radiusAnimation = Math.min(
+            (window.innerWidth * radiusCoef) / 1.3882 / 2,
+            100
+        );
+        // transitionState.radiusAnimation =
+        //     elWidth / Math.sin((Math.PI * 2) / $photoseries.length / 2) / 2;
+        translateSlider();
+        // startAnim();
+        // gsap.ticker.add(curtains.render.bind(curtains));
+        // gsap.ticker.add(() => curtains.render());
+    });
 </script>
 
 <div
