@@ -19,6 +19,7 @@
     import fragment from "$lib/assets/photoseries.frag?raw";
     import vertex from "$lib/assets/photoseries.vert?raw";
     import { gsap } from "gsap";
+    import { forEach } from "lodash-es";
     // import { anime } from "animejs";
 
     let slider,
@@ -36,7 +37,7 @@
             radiusAnimation: 0,
             scalePlane: 0.015,
             yRoundDisable: 1,
-            zRoundEnable: 0,
+            zRoundEnable: 1,
         },
         aspect = 0.668,
         height = 0.69,
@@ -101,9 +102,9 @@
             // visible: 1,
             autoloadSources: true,
             // depthTest: false,
-            fov: 1,
+            fov: 30,
             //   renderOrder: 2,
-            // alwaysDraw: false,
+            alwaysDraw: false,
             //   texturesOptions: {
             //     minFilter: curtains.gl.LINEAR_MIPMAP_NEAREST,
             //   },
@@ -148,7 +149,10 @@
 
             //   setTexture(plane);
 
-            plane.onReady(() => planes.push(plane));
+            plane.onReady(() => {
+                // plane.setScale(new Vec2(4.5, 4.5));
+                planes.push(plane);
+            });
         });
         // curtains.render();
     }
@@ -293,29 +297,14 @@
 
             const angle = angleStep * i;
             transVec.set(
-                Math.cos(
-                    angle +
-                        step +
-                        angleStep -
-                        sliderState.planeCorrection -
-                        sliderState.translation / 1300 +
-                        transitionState.time
-                ) * transitionState.radiusAnimation,
+                Math.cos(angle + sliderState.translation / 1300) *
+                    transitionState.radiusAnimation,
                 // Y
-                Math.cos(angle + transitionState.time) *
-                    transitionState.radiusAnimation *
-                    transitionState.yRoundDisable,
+                0,
                 // Z
-                Math.sin(
-                    angle +
-                        step +
-                        angleStep -
-                        sliderState.planeCorrection -
-                        sliderState.translation / 1300 +
-                        transitionState.time
-                ) *
-                    transitionState.radiusAnimation *
-                    transitionState.zRoundEnable
+                Math.sin(angle + sliderState.translation / 1300) *
+                    transitionState.radiusAnimation +
+                    transitionState.radiusAnimation
             );
             // if ($eventAnimation) {
             // plane.setScale(
@@ -392,7 +381,7 @@
         sliderState.endPosition = sliderState.currentPosition;
         // onChangeTitle(sliderState.currentPosition, e);
         // }
-        console.log(sliderState.currentPosition);
+        // console.log(sliderState.currentPosition);
     }
     function getMousePosition(e) {
         let mousePosition;
@@ -429,14 +418,16 @@
         elWidth =
             (window.innerHeight * height) / aspect +
             window.innerWidth * margin * 2;
+        console.log(elWidth, "elWidth");
         radius =
             elWidth / Math.sin((Math.PI * 2) / $photoseries.length / 2) / 2;
         // console.log(planes);
         transitionState.radiusAnimation = radius;
-        transitionState.radiusAnimation = Math.min(
-            (window.innerWidth * radiusCoef) / 1.3882 / 2,
-            100
-        );
+        console.log(radius, "radius");
+        // transitionState.radiusAnimation = Math.min(
+        //     (window.innerWidth * radiusCoef) / 1.3882 / 2,
+        //     100
+        // );
         // transitionState.radiusAnimation =
         //     elWidth / Math.sin((Math.PI * 2) / $photoseries.length / 2) / 2;
         translateSlider();
@@ -444,8 +435,12 @@
         // gsap.ticker.add(curtains.render.bind(curtains));
         // gsap.ticker.add(() => curtains.render());
     });
+    const check = () => {
+        planes.forEach((pl) => console.log(pl.isDrawn(), pl.index));
+    };
 </script>
 
+<button on:click={check}>Check</button>
 <div
     bind:this={slider}
     class:event={!$eventAnimation}
@@ -526,5 +521,8 @@
         width: 100%;
         height: 100vh;
         height: calc(var(--vh, 1vh) * 100);
+    }
+    #curtains canvas {
+        display: block;
     }
 </style>
