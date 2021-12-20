@@ -89,7 +89,8 @@ void main() {
 
   pos.y += -uPlanePosition.y * vertexProgress;
   pos.x += -uPlanePosition.x * vertexProgress;
-  // pos.z += vertexProgress;
+  pos.z = -cos(aTextureCoord.x-0.5)/4.;
+  pos.z += vertexProgress;
 
   gl_Position = uPMatrix * uMVMatrix * vec4(pos, 1.);
   vProgress = vertexProgress;

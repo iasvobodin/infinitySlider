@@ -70,7 +70,7 @@
             container: webgl,
             pixelRatio: Math.min(1.5, window.devicePixelRatio),
             // production: process.env.NODE_ENV !== "development",
-            // autoRender: false,
+            autoRender: false,
             //   antialias: false,
             // preserveDrawingBuffer: true,
             // depth: false,
@@ -99,10 +99,16 @@
             heightSegments: 16,
             vertexShader: vertex,
             fragmentShader: fragment,
+            // drawCheckMargins: {
+            //     top: 10,
+            //     right: 10,
+            //     bottom: 10,
+            //     left: 10,
+            // },
             // visible: 1,
             autoloadSources: true,
             // depthTest: false,
-            fov: 30,
+            // fov: 1,
             //   renderOrder: 2,
             alwaysDraw: false,
             //   texturesOptions: {
@@ -135,6 +141,7 @@
 
         [...planeElement].forEach((element, i) => {
             const plane = new Plane(curtains, element, paramsPlane);
+            curtains.render();
             // plane.userData = {
             //     route: $photoseries[plane.index].Route,
             //     color: $photoseries[plane.index].ColorVector,
@@ -148,13 +155,22 @@
             //   plane.setRenderTarget(distortionTarget);
 
             //   setTexture(plane);
-
+            // const angle = angleStep * i;
+            // console.log(angle);
             plane.onReady(() => {
+                // debugger;
+                console.log("plane");
+                // plane.setPerspective(50, 0.1, 10);
+                plane.setTransformOrigin(new Vec3(0.5, 0.5, 2));
                 // plane.setScale(new Vec2(4.5, 4.5));
                 planes.push(plane);
+                console.log(planes.length);
+                if (planes.length === [...planeElement].length) {
+                    translateSlider();
+                }
             });
         });
-        // curtains.render();
+        // curtains.disableDrawing();
     }
     function getUniforms(
         plane,
@@ -279,30 +295,46 @@
     //             startAnimation = null;
     //         });
     // }
-
+    let once = true;
     function translateSlider(t) {
         // curtains.render();
 
         // if ($eventAnimation) {
         sliderState.translation +=
-            (sliderState.currentPosition - sliderState.translation) * 0.05;
+            (sliderState.currentPosition - sliderState.translation) * 0.06;
         // }
+        // console.log(sliderState.currentPosition, "sliderState.currentPosition");
+        // console.log(sliderState.translation, "sliderState.translation");
+        if (
+            Math.abs(sliderState.currentPosition - sliderState.translation) >
+            0.06
+        ) {
+            curtains.render();
+            console.log("render");
+        }
         // disp +=
         //     (sliderState.currentPosition - sliderState.translation - disp) *
         //     0.3;
         // shaderPass && (shaderPass.uniforms.displacement.value = disp / 2500);
-
+        // [1, 2].forEach((e) => console.log(e));
         planes.forEach((plane, i) => {
+            // console.log("inside foreach");
             // console.log("e");
 
             const angle = angleStep * i;
+            // console.log(angle);
             transVec.set(
-                Math.cos(angle + sliderState.translation / 1300) *
-                    transitionState.radiusAnimation,
+                Math.cos(
+                    (angle - Math.PI / 2 + sliderState.translation / 1300) %
+                        (Math.PI * 2)
+                ) * transitionState.radiusAnimation,
                 // Y
                 0,
                 // Z
-                Math.sin(angle + sliderState.translation / 1300) *
+                Math.sin(
+                    (angle - Math.PI / 2 + sliderState.translation / 1300) %
+                        (Math.PI * 2)
+                ) *
                     transitionState.radiusAnimation +
                     transitionState.radiusAnimation
             );
@@ -323,7 +355,14 @@
             //         plane.visible = planesTitle[i].visible = true;
             //     }
             // }
+            // if (angleStep > Math.PI) {
+            //     angleStep = -angleStep;
+            // }
             plane.setRelativeTranslation(transVec);
+
+            plane.setRotation(
+                new Vec3(0, (angle + sliderState.translation / 1300) * -1, 0)
+            );
         });
         // START ANIMATION
 
@@ -332,6 +371,11 @@
         // startAnimation && startAnimation.tick(t);
 
         animationFrame = requestAnimationFrame(translateSlider);
+        if (once) {
+            curtains.render();
+            console.log("render");
+            once = false;
+        }
     }
 
     function onMouseDown(e) {
@@ -420,7 +464,8 @@
             window.innerWidth * margin * 2;
         console.log(elWidth, "elWidth");
         radius =
-            elWidth / Math.sin((Math.PI * 2) / $photoseries.length / 2) / 2;
+            // elWidth /
+            Math.sin((Math.PI * 2) / $photoseries.length / 2) / 2;
         // console.log(planes);
         transitionState.radiusAnimation = radius;
         console.log(radius, "radius");
@@ -430,13 +475,13 @@
         // );
         // transitionState.radiusAnimation =
         //     elWidth / Math.sin((Math.PI * 2) / $photoseries.length / 2) / 2;
-        translateSlider();
+
         // startAnim();
         // gsap.ticker.add(curtains.render.bind(curtains));
         // gsap.ticker.add(() => curtains.render());
     });
     const check = () => {
-        planes.forEach((pl) => console.log(pl.isDrawn(), pl.index));
+        // planes.forEach((pl) => console.log(pl.isDrawn(), pl.index));
     };
 </script>
 
@@ -457,18 +502,18 @@
     {#each $photoseries as seriya, index (index)}
         <div class="plane" class:plane__redy={curtains}>
             <picture class="standart__picture">
-                <source
+                <!-- <source
                     media="(orientation: portrait)"
                     srcset="https://raw.githubusercontent.com/iasvobodin/svs/images/static/image/webp/{seriya
                         .largePortrait.src}.webp"
                     type="image/webp"
-                />
-                <source
+                /> -->
+                <!-- <source
                     media="(orientation: portrait)"
                     srcset="https://raw.githubusercontent.com/iasvobodin/svs/images/static/image/jpg/{seriya
                         .largePortrait.src}.jpg"
                     type="image/jpg"
-                />
+                /> -->
                 <source
                     media="(orientation: landscape)"
                     srcset="https://raw.githubusercontent.com/iasvobodin/svs/images/static/image/webp/{seriya
@@ -495,6 +540,9 @@
 <div bind:this={webgl} id="curtains" />
 
 <style>
+    .event {
+        pointer-events: none;
+    }
     .wrapper {
         /* align-content: center; */
         justify-content: center;
