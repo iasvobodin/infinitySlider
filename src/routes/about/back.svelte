@@ -1,7 +1,5 @@
 <script>
     import { eventAnimation, photoseries } from "$lib/store.js";
-    import { GUI } from "dat.gui";
-    import * as dat from "dat.gui";
     import {
         goto,
         invalidate,
@@ -28,7 +26,6 @@
         webgl,
         curtains,
         planes = [],
-        activePlane,
         loader,
         //ANIMATIONS
         disp = 0,
@@ -52,8 +49,8 @@
         radiusCoef = 0.0755,
         animationFrame = null,
         //getUniform parametr
-        widthUn = 1,
-        heightUn = 1,
+        widthUn = 0.7,
+        heightUn = 0.8,
         // aspect = 0.668,
         //SLIDER EVENTS
         isTrackpad = true,
@@ -69,7 +66,7 @@
             mousePosition: 0,
             moveSpeed: 3,
         };
-    console.log(angleStep, "angleStep");
+
     function initCurtains() {
         curtains = new Curtains({
             container: webgl,
@@ -117,8 +114,8 @@
             visible: false,
             // autoloadSources: true,
             // depthTest: false,
-            fov: 1,
-            renderOrder: 0,
+            // fov: 100,
+            //   renderOrder: 2,
             alwaysDraw: false,
             //   texturesOptions: {
             //     minFilter: curtains.gl.LINEAR_MIPMAP_NEAREST,
@@ -172,51 +169,14 @@
                 // plane.setPerspective(50, 0.1, 10);
                 // plane.setTransformOrigin(new Vec3(0.5, 0.5, 2));
                 // plane.setScale(new Vec2(4.5, 4.5));
-                getUniforms(plane);
                 planes.push(plane);
-                // curtains.needRender();
-
                 // console.log(planes.length);
                 // if (planes.length === [...planeElement].length) {
                 //     translateSlider();
                 // }
             });
-
-            // .onLoading((texture) => {
-            //     // our canvas texture is ready
-            //     console.log("onloading here");
-            //     texture.shouldUpdate = false;
-            // });
         });
         // curtains.disableDrawing();
-    }
-    function initGUI(plane) {
-        // const gui2 = new dat.GUI();
-        const gui = new GUI();
-        // planes.forEach((plane) => {
-        gui.add(plane.uniforms.uProgress, "value", 0, 1, 0.01)
-            .name("progress")
-            .onChange((value) => {
-                plane.uniforms.uProgress.value = value;
-                plane.setRotation(
-                    new Vec3(0, plane.rotation.y * (1 - value), 0)
-                );
-                // plane.setScale(new Vec2(1 + value, 1 + value));
-                curtains.render();
-            })
-            .onFinishChange(() => {
-                // plane.textures[0].setScale(new Vec2(2, 2));
-                console.log("ff");
-            });
-        // });
-
-        // gui
-        //   .add(plane.material.uniforms.amplitude, "value", 1, 30)
-        //   .name("amplitude");
-
-        // gui.add(plane.material.uniforms.speed, "value", 0, 2).name("speed");
-
-        return gui;
     }
     function getUniforms(
         plane,
@@ -368,7 +328,7 @@
             // console.log("e");
             // - Math.PI / 2
             const angle =
-                (angleStep * i + Math.PI - sliderState.translation / 1300) %
+                (angleStep * i + sliderState.translation / 1300) %
                 (Math.PI * 2);
 
             transVec.set(
@@ -399,17 +359,21 @@
             // if (angleStep > Math.PI) {
             //     angleStep = -angleStep;
             // }
-            !plane.visible && (plane.visible = true);
+            plane.visible = true;
             plane.setRelativeTranslation(transVec);
-            // plane.setRotation(new Vec3(0, -Math.sin(angle), 0));
-            // plane.setScale(
-            //     new Vec2(1, 1 + Math.abs(Math.sin(angle) / (Math.PI * 2)))
+            // console.log(
+            //     (angleStep * i + sliderState.translation / 1300) * -1,
+            //     "7yhjhjhjhjjjjjjjj"
             // );
-            if (Math.cos(angle) > 0) {
-                plane.visible = false;
-            } else {
-                plane.visible = true;
-            }
+            plane.setRotation(
+                new Vec3(
+                    0,
+                    // -0.1,
+                    ((angleStep * i + sliderState.translation / 1300) * -1) /
+                        20,
+                    0
+                )
+            );
         });
         // START ANIMATION
 
@@ -440,17 +404,12 @@
             }
             // Clicked
             activePlane = el;
-            initGUI(activePlane);
-
             //   testId = el.index;
             //   activePlaneTitle = planesTitle[i];
-            // eventAnimation.set(false);
-            getUniforms(activePlane);
-            activePlane.setRenderOrder(planes.length + 1);
-            // activePlane.uniforms.uProgress.value = 0.089;
-            console.log("click");
-            // toRouteAnim();
-            // goto(`/${el.userData.route}/`);
+            eventAnimation.set(false);
+            // getUnifors(activePlane);
+            toRouteAnim();
+            goto(`/${el.userData.route}/`);
         });
     }
     function onMouseDown(e) {
@@ -471,13 +430,13 @@
         sliderState.isMouseDown = false;
         sliderState.endPosition = sliderState.currentPosition;
         sliderState.clickUp = getMousePosition(e);
-        if (
-            sliderState.clickUp[0] === sliderState.clickDown[0] &&
-            // $eventAnimation &&
-            sliderState.clickUp[1] === sliderState.clickDown[1]
-        ) {
-            onPlaneClick(sliderState.clickUp[0]);
-        }
+        // if (
+        //     sliderState.clickUp[0] === sliderState.clickDown[0] &&
+        //     $eventAnimation &&
+        //     sliderState.clickUp[1] === sliderState.clickDown[1]
+        // ) {
+        //     onPlaneClick(sliderState.clickUp[0]);
+        // }
     }
     function onWheel(e) {
         // if ($eventAnimation) {
@@ -531,18 +490,9 @@
         initCurtains();
         curtains.onSuccess(() => {
             addPlane();
-            translateSlider();
-
-            // gsap.ticker.add(() => {
-            //     // curtains.render();
-            //     // translateSlider();
-            // });
         });
-        // .onRender(() => {
-        //     translateSlider();
-        // });
         aspect = 0.668;
-        height = 0.55;
+        height = 0.69;
         margin = 0.06;
         elWidth =
             (window.innerHeight * height) / aspect +
@@ -557,7 +507,7 @@
         // transitionState.radiusAnimation = radius;
         transitionState.radiusAnimation = rad;
         console.log(radius, "radius", rad);
-        // translateSlider();
+        translateSlider();
 
         // transitionState.radiusAnimation = Math.min(
         //     (window.innerWidth * radiusCoef) / 1.3882 / 2,
@@ -568,6 +518,7 @@
 
         // startAnim();
         // gsap.ticker.add(curtains.render.bind(curtains));
+        // gsap.ticker.add(() => curtains.render());
     });
     const check = () => {
         planes.forEach((pl) =>
@@ -576,13 +527,6 @@
     };
 </script>
 
-<div class="fullscreenTexture">
-    <img
-        src="https://raw.githubusercontent.com/iasvobodin/svs/images/static/image/webp/{$photoseries[1]
-            .largeLandscape.src}.webp"
-        alt="ff"
-    />
-</div>
 <button on:click={check}>Check</button>
 <div
     bind:this={slider}
@@ -637,29 +581,6 @@
 <div bind:this={webgl} id="curtains" />
 
 <style>
-    .fullscreenTexture {
-        pointer-events: none;
-        position: absolute;
-        width: 100%;
-        height: 100vh;
-    }
-    .fullscreenTexture img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        object-position: center;
-    }
-    :root {
-        --plane__height: 55vh;
-        --plane__width: calc(var(--plane__height) * 1.5);
-    }
-    .plane {
-        align-self: center;
-        position: absolute;
-        box-sizing: border-box;
-        height: var(--plane__height);
-        width: var(--plane__width);
-    }
     .event {
         pointer-events: none;
     }

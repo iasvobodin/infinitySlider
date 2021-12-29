@@ -86,14 +86,15 @@ void main() {
 
   vec2 scale = vec2(1. + uScaleVector * vertexProgress);
   pos.xy *= scale;
-
+  vec2 vaTextureCoord = aTextureCoord;
+vec2 scaledCord = vaTextureCoord *=scale;
   pos.y += -uPlanePosition.y * vertexProgress;
   pos.x += -uPlanePosition.x * vertexProgress;
-  pos.z = -cos(aTextureCoord.x-0.5)/4.;
-  pos.z += vertexProgress;
+  // pos.z = -cos(aTextureCoord.x-0.5)/4.;
+  // pos.z += vertexProgress;
 
   gl_Position = uPMatrix * uMVMatrix * vec4(pos, 1.);
   vProgress = vertexProgress;
-  vTextureCoord0 = (planeTextureMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy;
+  vTextureCoord0 = (planeTextureMatrix  * vec4(aTextureCoord, 0.0, 1.0)).xy;
   vTextureCoord1 = aTextureCoord;
 }
