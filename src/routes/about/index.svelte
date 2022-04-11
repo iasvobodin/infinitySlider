@@ -1,13 +1,22 @@
 <script>
     import { eventAnimation, photoseries } from "$lib/store.js";
-    import { GUI } from "dat.gui";
-    import * as dat from "dat.gui";
+    // import { GUI } from "dat.gui";
+    // import * as dat from "dat.gui";
     import {
         goto,
         invalidate,
         prefetch,
         prefetchRoutes,
     } from "$app/navigation";
+    // import {
+    //     Curtains,
+    //     Plane,
+    //     Vec3,
+    //     Vec2,
+    //     TextureLoader,
+    //     ShaderPass,
+    //     RenderTarget,
+    // } from "curtainsjs";
     import {
         Curtains,
         Plane,
@@ -190,34 +199,34 @@
         });
         // curtains.disableDrawing();
     }
-    function initGUI(plane) {
-        // const gui2 = new dat.GUI();
-        const gui = new GUI();
-        // planes.forEach((plane) => {
-        gui.add(plane.uniforms.uProgress, "value", 0, 1, 0.01)
-            .name("progress")
-            .onChange((value) => {
-                plane.uniforms.uProgress.value = value;
-                plane.setRotation(
-                    new Vec3(0, plane.rotation.y * (1 - value), 0)
-                );
-                // plane.setScale(new Vec2(1 + value, 1 + value));
-                curtains.render();
-            })
-            .onFinishChange(() => {
-                // plane.textures[0].setScale(new Vec2(2, 2));
-                console.log("ff");
-            });
-        // });
+    // function initGUI(plane) {
+    //     // const gui2 = new dat.GUI();
+    //     const gui = new GUI();
+    //     // planes.forEach((plane) => {
+    //     gui.add(plane.uniforms.uProgress, "value", 0, 1, 0.01)
+    //         .name("progress")
+    //         .onChange((value) => {
+    //             plane.uniforms.uProgress.value = value;
+    //             plane.setRotation(
+    //                 new Vec3(0, plane.rotation.y * (1 - value), 0)
+    //             );
+    //             // plane.setScale(new Vec2(1 + value, 1 + value));
+    //             curtains.render();
+    //         })
+    //         .onFinishChange(() => {
+    //             // plane.textures[0].setScale(new Vec2(2, 2));
+    //             console.log("ff");
+    //         });
+    //     // });
 
-        // gui
-        //   .add(plane.material.uniforms.amplitude, "value", 1, 30)
-        //   .name("amplitude");
+    //     // gui
+    //     //   .add(plane.material.uniforms.amplitude, "value", 1, 30)
+    //     //   .name("amplitude");
 
-        // gui.add(plane.material.uniforms.speed, "value", 0, 2).name("speed");
+    //     // gui.add(plane.material.uniforms.speed, "value", 0, 2).name("speed");
 
-        return gui;
-    }
+    //     return gui;
+    // }
     function getUniforms(
         plane,
         opt = { pCorr: true, sCorr: true, fCorr: true }
@@ -440,7 +449,7 @@
             }
             // Clicked
             activePlane = el;
-            initGUI(activePlane);
+            // initGUI(activePlane);
 
             //   testId = el.index;
             //   activePlaneTitle = planesTitle[i];
@@ -577,11 +586,7 @@
 </script>
 
 <div class="fullscreenTexture">
-    <img
-        src="https://raw.githubusercontent.com/iasvobodin/svs/images/static/image/webp/{$photoseries[1]
-            .largeLandscape.src}.webp"
-        alt="ff"
-    />
+    <img src="/image/q2.jpg" alt="ff" />
 </div>
 <button on:click={check}>Check</button>
 <div
@@ -686,6 +691,7 @@
         pointer-events: none;
         position: absolute;
         top: 0;
+        opacity: 0.5;
         left: 0;
         overflow: hidden;
         width: 100%;
